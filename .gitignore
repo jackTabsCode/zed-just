@@ -1,2 +1,3 @@
 /grammars/*
 justfile
+.DS_Store
