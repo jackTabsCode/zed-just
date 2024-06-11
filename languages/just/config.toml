@@ -1,5 +1,12 @@
 name = "Just"
 grammar = "just"
-path_suffixes = ["justfile", "JUSTFILE", ".justfile"]
+path_suffixes = [
+    "justfile",
+    "Justfile",
+    "JUSTFILE",
+    ".justfile",
+    ".Justfile",
+    ".JUSTFILE",
+]
 line_comments = ["# "]
 brackets = [{ start = "(", end = ")", close = true, newline = true }]
