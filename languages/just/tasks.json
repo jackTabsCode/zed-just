@@ -1,0 +1,9 @@
+[
+  {
+    "label": "$ZED_SYMBOL",
+    "command": "just \"$ZED_SYMBOL\"",
+    "tags": [
+      "just-recipe"
+    ]
+  }
+]
