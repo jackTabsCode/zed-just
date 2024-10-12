@@ -1,3 +1,5 @@
+default := "Hello, World!"
+
 # Comment
-echo msg:
-    @echo msg
+echo msg=default:
+    @echo {{msg}}
