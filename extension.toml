@@ -1,6 +1,6 @@
 id = "just"
 name = "Justfile"
-description = "Justfile syntax highlighting dev "
+description = "Justfile syntax highlighting"
 version = "0.1.4"
 schema_version = 1
 authors = ["Jack T. <jack@jackt.space>"]
