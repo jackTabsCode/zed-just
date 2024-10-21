@@ -1,10 +1,10 @@
 id = "just"
 name = "Justfile"
 description = "Justfile syntax highlighting dev "
-version = "0.1.5"
+version = "0.1.4"
 schema_version = 1
-authors = ["Jack T. <jack@jackt.space>", "Sylvain M <Sylvain.maret@hotmail.fr"]
-repository = "https://github.com/smCloudInTheSky/zed-just"
+authors = ["Jack T. <jack@jackt.space>"]
+repository = "https://github.com/jackTabsCode/zed-just"
 
 [grammars.just]
 repository = "https://github.com/IndianBoy42/tree-sitter-just"
