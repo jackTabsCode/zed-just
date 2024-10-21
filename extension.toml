@@ -1,11 +1,11 @@
 id = "just"
 name = "Justfile"
-description = "Justfile syntax highlighting"
-version = "0.1.3"
+description = "Justfile syntax highlighting dev "
+version = "0.1.5"
 schema_version = 1
-authors = ["Jack T. <jack@jackt.space>"]
-repository = "https://github.com/jackTabsCode/zed-just"
+authors = ["Jack T. <jack@jackt.space>", "Sylvain M <Sylvain.maret@hotmail.fr"]
+repository = "https://github.com/smCloudInTheSky/zed-just"
 
 [grammars.just]
 repository = "https://github.com/IndianBoy42/tree-sitter-just"
-commit = "792717c262df6d6fa285c1136a11c23cedadcb0c"
+commit = "6aee3d2f5b3a47286bae0916daaa6c7a217f6fa4"
