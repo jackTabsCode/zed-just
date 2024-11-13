@@ -6,25 +6,26 @@
 
 ; ================ Always applicable ================
 
-((comment) @injection.content
-  (#set! injection.language "comment"))
+((comment) @content
+  (#set! language "comment"))
 
 ; Highlight the RHS of `=~` as regex
 ((regex_literal
-  (_) @injection.content)
-  (#set! injection.language "regex"))
+  (_) @content)
+  (#set! language "regex"))
 
 ; ================ Global defaults ================
 
 ; Default everything to be bash
 (recipe_body
   !shebang
-  (#set! injection.language "bash")
-  (#set! injection.include-children)) @injection.content
+  ((recipe_line)) @content
+  (#set! language "bash"))
+
 
 (external_command
-  (command_body) @injection.content
-  (#set! injection.language "bash"))
+  (command_body) @content
+  (#set! language "bash"))
 
 ; ================ Global language specified ================
 ; Global language is set with something like one of the following:
@@ -48,34 +49,34 @@
 (source_file
   (setting "shell" ":=" "[" (string) @_langstr
     (#match? @_langstr ".*(powershell|pwsh|cmd).*")
-    (#set! injection.language "powershell"))
+    (#set! language "powershell"))
   [
     (recipe
       (recipe_body
         !shebang
-        (#set! injection.include-children)) @injection.content)
+        ((recipe_line)) @content))
 
     (assignment
       (expression
         (value
           (external_command
-            (command_body) @injection.content))))
+            (command_body) @content))))
   ])
 
 (source_file
-  (setting "shell" ":=" "[" (string) @injection.language
-    (#not-match? @injection.language ".*(powershell|pwsh|cmd).*"))
+    (setting "shell" ":=" "[" (string) @language
+    (#not-match? @language ".*(powershell|pwsh|cmd).*"))
   [
     (recipe
       (recipe_body
         !shebang
-        (#set! injection.include-children)) @injection.content)
+        ((recipe_line)) @content))
 
     (assignment
       (expression
         (value
           (external_command
-            (command_body) @injection.content))))
+            (command_body) @content))))
   ])
 
 ; ================ Recipe language specified ================
@@ -83,9 +84,9 @@
 ; Set highlighting for recipes that specify a language, using the exact name by default
 (recipe_body ;
   (shebang ;
-    (language) @injection.language)
-  (#not-any-of? @injection.language "python3" "nodejs" "node")
-  (#set! injection.include-children)) @injection.content
+    (language) @language)
+    ((recipe_line)) @content
+  (#not-any-of? @language "python3" "nodejs" "node"))
 
 ; Transform some known executables
 
@@ -93,14 +94,14 @@
 (recipe_body
   (shebang
     (language) @_lang)
+  ((recipe_line)) @content
   (#eq? @_lang "python3")
-  (#set! injection.language "python")
-  (#set! injection.include-children)) @injection.content
+  (#set! language "python"))
 
 ; node/nodejs -> javascript
 (recipe_body
   (shebang
     (language) @_lang)
+  ((recipe_line)) @content
   (#any-of? @_lang "node" "nodejs")
-  (#set! injection.language "javascript")
-  (#set! injection.include-children)) @injection.content
+  (#set! language "javascript"))
