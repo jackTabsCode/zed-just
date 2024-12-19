@@ -6,9 +6,6 @@
 
 ; ================ Always applicable ================
 
-((comment) @content
-  (#set! language "comment"))
-
 ; Highlight the RHS of `=~` as regex
 ((regex_literal
   (_) @content)
