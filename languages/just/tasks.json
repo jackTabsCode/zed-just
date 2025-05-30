@@ -1,7 +1,7 @@
 [
   {
     "label": "$ZED_SYMBOL",
-    "command": "(cd \"$ZED_DIRNAME\" && just \"$ZED_SYMBOL\")",
+    "command": "cd \"$ZED_DIRNAME\" && just \"$ZED_SYMBOL\"",
     "tags": ["just-recipe"]
   }
 ]
