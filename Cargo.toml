@@ -1,0 +1,15 @@
+[package]
+name = "just"
+version = "0.2.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+zed_extension_api = "0.7.0"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
