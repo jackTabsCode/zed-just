@@ -131,19 +131,37 @@
 (attribute
   (identifier) @attribute
   (#any-of? @attribute
-    "private"
     "allow-duplicate-recipes"
+    "confirm"
+    "default"
+    "doc"
     "dotenv-filename"
     "dotenv-load"
     "dotenv-path"
+    "exit-message"
     "export"
+    "extension"
     "fallback"
+    "group"
     "ignore-comments"
+    "linux"
+    "macos"
+    "metadata"
+    "no-cd"
+    "no-exit-message"
+    "no-quiet"
+    "openbsd"
+    "parallel"
     "positional-arguments"
+    "private"
+    "script"
     "shell"
     "tempdi"
+    "unix"
+    "windows"
     "windows-powershell"
-    "windows-shell"))
+    "windows-shell"
+    "working-directory"))
 
 ; Numbers are part of the syntax tree, even if disallowed
 (numeric_error) @error
