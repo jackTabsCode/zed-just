@@ -1,11 +1,18 @@
 id = "just"
 name = "Justfile"
-description = "Justfile syntax highlighting"
-version = "0.1.4"
+description = "Justfile language support"
+version = "0.2.0"
 schema_version = 1
-authors = ["Jack T. <jack@jackt.space>"]
+authors = [
+  "Jack T. <jack@jackt.space>",
+  "Matt Robenolt <m@robenolt.com>",
+]
 repository = "https://github.com/jackTabsCode/zed-just"
 
 [grammars.just]
 repository = "https://github.com/IndianBoy42/tree-sitter-just"
-commit = "3f90d24eb8c8d9e8c74fee7120d79c3ec7229f26"
+commit = "bb0c898a80644de438e6efe5d88d30bf092935cd"
+
+[language_servers.just-lsp]
+name = "just-lsp"
+languages = ["Just"]
