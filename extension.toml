@@ -4,7 +4,7 @@ description = "Justfile language support"
 version = "0.2.0"
 schema_version = 1
 authors = [
-  "Jack T. <jack@jackt.space>",
+  "Jack Taylor <j@jackt.io>",
   "Matt Robenolt <m@robenolt.com>",
 ]
 repository = "https://github.com/jackTabsCode/zed-just"
