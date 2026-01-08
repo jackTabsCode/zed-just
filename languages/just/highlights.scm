@@ -111,39 +111,41 @@
 (shebang) @keyword.directive
 
 ; highlight known settings (filtering does not always work)
+; source: https://just.systems/man/en/settings.html
 (setting
   left: (identifier) @keyword
   (#any-of? @keyword
     "allow-duplicate-recipes"
+    "allow-duplicate-variables"
     "dotenv-filename"
     "dotenv-load"
+    "dotenv-override"
     "dotenv-path"
+    "dotenv-required"
     "export"
     "fallback"
     "ignore-comments"
     "positional-arguments"
+    "quiet"
+    "script-interpreter"
     "shell"
-    "tempdi"
+    "tempdir"
+    "unstable"
     "windows-powershell"
-    "windows-shell"))
+    "windows-shell"
+    "working-directory"))
 
 ; highlight known attributes (filtering does not always work)
+; source: https://just.systems/man/en/attributes.html
 (attribute
   (identifier) @attribute
   (#any-of? @attribute
-    "allow-duplicate-recipes"
+    "arg"
     "confirm"
     "default"
     "doc"
-    "dotenv-filename"
-    "dotenv-load"
-    "dotenv-path"
-    "exit-message"
-    "export"
     "extension"
-    "fallback"
     "group"
-    "ignore-comments"
     "linux"
     "macos"
     "metadata"
@@ -155,12 +157,8 @@
     "positional-arguments"
     "private"
     "script"
-    "shell"
-    "tempdi"
     "unix"
     "windows"
-    "windows-powershell"
-    "windows-shell"
     "working-directory"))
 
 ; Numbers are part of the syntax tree, even if disallowed

@@ -84,16 +84,16 @@
 (recipe_body ;
   (shebang ;
     (language) @injection.language)
-  (#not-any-of? @injection.language "python3" "nodejs" "node")
+  (#not-any-of? @injection.language "python3" "uv" "nodejs" "node" "bun" "ts" "tsx" "deno" "sh" "zsh" "fish" "pwsh" "pwsh.exe" "powershell" "powershell.exe")
   (#set! injection.include-children)) @injection.content
 
 ; Transform some known executables
 
-; python3 -> python
+; python3/uv -> python
 (recipe_body
   (shebang
     (language) @_lang)
-  (#eq? @_lang "python3")
+  (#any-of? @_lang "python3" "uv")
   (#set! injection.language "python")
   (#set! injection.include-children)) @injection.content
 
@@ -103,4 +103,36 @@
     (language) @_lang)
   (#any-of? @_lang "node" "nodejs")
   (#set! injection.language "javascript")
+  (#set! injection.include-children)) @injection.content
+
+; bun -> javascript
+(recipe_body
+  (shebang
+    (language) @_lang)
+  (#eq? @_lang "bun")
+  (#set! injection.language "javascript")
+  (#set! injection.include-children)) @injection.content
+
+; ts/tsx/deno -> typescript
+(recipe_body
+  (shebang
+    (language) @_lang)
+  (#any-of? @_lang "ts" "tsx" "deno")
+  (#set! injection.language "typescript")
+  (#set! injection.include-children)) @injection.content
+
+; sh/zsh/fish -> bash
+(recipe_body
+  (shebang
+    (language) @_lang)
+  (#any-of? @_lang "sh" "zsh" "fish")
+  (#set! injection.language "bash")
+  (#set! injection.include-children)) @injection.content
+
+; pwsh/powershell (with or without .exe) -> powershell
+(recipe_body
+  (shebang
+    (language) @_lang)
+  (#any-of? @_lang "pwsh" "pwsh.exe" "powershell" "powershell.exe")
+  (#set! injection.language "powershell")
   (#set! injection.include-children)) @injection.content

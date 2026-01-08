@@ -10,8 +10,8 @@ authors = [
 repository = "https://github.com/jackTabsCode/zed-just"
 
 [grammars.just]
-repository = "https://github.com/IndianBoy42/tree-sitter-just"
-commit = "bb0c898a80644de438e6efe5d88d30bf092935cd"
+repository = "https://github.com/mattrobenolt/tree-sitter-just"
+rev = "a2e0c786fa90ac1e85dc40708b2ab277c007f55e"
 
 [language_servers.just-lsp]
 name = "just-lsp"

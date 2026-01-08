@@ -106,3 +106,8 @@ default-recipe:
 [private]
 combined:
     echo "Multiple attributes on one line"
+
+[arg('n', help='HELP')]
+[arg('n', pattern='\d+')]
+double n:
+    echo $(({{n}} * 2))
