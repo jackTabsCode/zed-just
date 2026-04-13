@@ -1,6 +1,8 @@
 use std::fs;
 
+use sha2::{Digest, Sha256};
 use zed_extension_api::{
+    http_client::{HttpMethod, HttpRequest, RedirectPolicy},
     Architecture, Command, DownloadedFileType, Extension, GithubReleaseOptions, LanguageServerId,
     Os, Result, Worktree, current_platform, download_file, latest_github_release,
     make_file_executable, register_extension,
@@ -75,6 +77,52 @@ impl JustExtension {
 
         // Check if already downloaded
         if !fs::metadata(&binary_path).is_ok_and(|stat| stat.is_file()) {
+            // Fetch SHA256SUMS from the release
+            let checksums_asset = release
+                .assets
+                .iter()
+                .find(|a| a.name == "SHA256SUMS")
+                .ok_or("SHA256SUMS not found in release assets")?;
+
+            let checksums_response = HttpRequest {
+                url: checksums_asset.download_url.clone(),
+                method: HttpMethod::Get,
+                headers: vec![],
+                body: None,
+                redirect_policy: RedirectPolicy::FollowAll,
+            }
+            .fetch()?;
+
+            let checksums_text = String::from_utf8(checksums_response.body)
+                .map_err(|e| format!("Invalid SHA256SUMS encoding: {e}"))?;
+
+            let expected_hash = checksums_text
+                .lines()
+                .find(|line| line.ends_with(asset_name.as_str()))
+                .and_then(|line| line.split_whitespace().next())
+                .ok_or_else(|| {
+                    format!("Checksum for {asset_name} not found in SHA256SUMS")
+                })?;
+
+            // Download archive and verify its SHA256 checksum
+            let archive_response = HttpRequest {
+                url: asset.download_url.clone(),
+                method: HttpMethod::Get,
+                headers: vec![],
+                body: None,
+                redirect_policy: RedirectPolicy::FollowAll,
+            }
+            .fetch()?;
+
+            let computed_hash = format!("{:x}", Sha256::digest(&archive_response.body));
+
+            if computed_hash != expected_hash {
+                return Err(format!(
+                    "Checksum verification failed for {asset_name}: expected {expected_hash}, got {computed_hash}"
+                ));
+            }
+
+            // Checksum verified — download and extract
             download_file(
                 &asset.download_url,
                 &version_dir,
@@ -83,7 +131,7 @@ impl JustExtension {
                     _ => DownloadedFileType::GzipTar,
                 },
             )
-            .map_err(|e| format!("Failed to download just-lsp: {}", e))?;
+            .map_err(|e| format!("Failed to download just-lsp: {e}"))?;
 
             make_file_executable(&binary_path)?;
         }
