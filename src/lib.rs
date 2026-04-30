@@ -1,46 +1,108 @@
+mod config;
+mod util;
+
 use std::fs;
 
 use zed_extension_api::{
     Architecture, Command, DownloadedFileType, Extension, GithubReleaseOptions, LanguageServerId,
-    Os, Result, Worktree, current_platform, download_file, latest_github_release,
-    make_file_executable, register_extension,
+    LanguageServerInstallationStatus, Os, Result, Worktree, current_platform, download_file,
+    latest_github_release, make_file_executable, register_extension, serde_json::Value,
+    set_language_server_installation_status,
 };
+
+struct JustLspBinary {
+    path: String,
+    args: Vec<String>,
+    env: Vec<(String, String)>,
+}
 
 struct JustExtension {
     cached_binary_path: Option<String>,
 }
 
 impl JustExtension {
+    const LANGUAGE_SERVER_ID: &'static str = "just-lsp";
+
     fn language_server_binary_path(
         &mut self,
-        _language_server_id: &LanguageServerId,
+        language_server_id: &LanguageServerId,
         worktree: &Worktree,
-    ) -> Result<String> {
+    ) -> Result<JustLspBinary> {
+        let (os, arch) = current_platform();
+        let extension = match os {
+            Os::Windows => ".exe",
+            _ => "",
+        };
+
+        let binary_name = format!("{}{extension}", Self::LANGUAGE_SERVER_ID);
+        let binary_settings = config::get_binary_settings(Self::LANGUAGE_SERVER_ID, worktree);
+        let binary_args = config::get_binary_args(&binary_settings).unwrap_or_default();
+        let binary_env = config::get_binary_env(&binary_settings).unwrap_or_default();
+
         // Check if already cached
-        if let Some(path) = &self.cached_binary_path
-            && fs::metadata(path).is_ok_and(|stat| stat.is_file())
+        if let Some(binary_path) = &self.cached_binary_path
+            && fs::metadata(binary_path).is_ok_and(|stat| stat.is_file())
         {
-            return Ok(path.clone());
+            return Ok(JustLspBinary {
+                path: binary_path.clone(),
+                args: binary_args,
+                env: binary_env,
+            });
+        }
+
+        // Check if just-lsp path was specified
+        if let Some(binary_path) = config::get_binary_path(&binary_settings) {
+            self.cached_binary_path = Some(binary_path.clone());
+            return Ok(JustLspBinary {
+                path: binary_path,
+                args: binary_args,
+                env: binary_env,
+            });
         }
 
         // Check if just-lsp is on PATH
-        if let Some(path) = worktree.which("just-lsp") {
-            self.cached_binary_path = Some(path.clone());
-            return Ok(path);
+        if let Some(binary_path) = worktree.which(Self::LANGUAGE_SERVER_ID) {
+            self.cached_binary_path = Some(binary_path.clone());
+            return Ok(JustLspBinary {
+                path: binary_path,
+                args: binary_args,
+                env: binary_env,
+            });
         }
 
         // Download and install just-lsp
-        let release = latest_github_release(
+        set_language_server_installation_status(
+            language_server_id,
+            &LanguageServerInstallationStatus::CheckingForUpdate,
+        );
+
+        // Check if already downloaded when fetching the latest GitHub release fails
+        let release = match latest_github_release(
             "terror/just-lsp",
             GithubReleaseOptions {
                 require_assets: true,
                 pre_release: false,
             },
-        )?;
+        ) {
+            Ok(release) => release,
+            Err(_) => {
+                if let Some(binary_path) =
+                    util::find_existing_binary(Self::LANGUAGE_SERVER_ID, &binary_name)
+                {
+                    self.cached_binary_path = Some(binary_path.clone());
+                    return Ok(JustLspBinary {
+                        path: binary_path,
+                        args: binary_args,
+                        env: binary_env,
+                    });
+                }
+                return Err("Failed to download just-lsp".to_string());
+            }
+        };
 
-        let (os, arch) = current_platform();
         let asset_name = format!(
-            "just-lsp-{version}-{target}.{extension}",
+            "{}-{version}-{target}.{extension}",
+            Self::LANGUAGE_SERVER_ID,
             version = release.version,
             target = match (os, arch) {
                 (Os::Mac, Architecture::Aarch64) => "aarch64-apple-darwin",
@@ -63,33 +125,35 @@ impl JustExtension {
             .find(|asset| asset.name == asset_name)
             .ok_or_else(|| format!("Asset {} not found in release", asset_name))?;
 
-        let version_dir = format!("just-lsp-{}", release.version);
-        let binary_path = format!(
-            "{}/just-lsp{}",
-            version_dir,
-            match os {
-                Os::Windows => ".exe",
-                _ => "",
-            }
-        );
+        let version_dir = format!("{}-{}", Self::LANGUAGE_SERVER_ID, release.version);
+        let binary_path = format!("{}/{}", version_dir, binary_name);
 
-        // Check if already downloaded
+        // Check if already downloaded latest version
         if !fs::metadata(&binary_path).is_ok_and(|stat| stat.is_file()) {
-            download_file(
-                &asset.download_url,
-                &version_dir,
-                match os {
-                    Os::Windows => DownloadedFileType::Zip,
-                    _ => DownloadedFileType::GzipTar,
-                },
-            )
-            .map_err(|e| format!("Failed to download just-lsp: {}", e))?;
+            set_language_server_installation_status(
+                language_server_id,
+                &LanguageServerInstallationStatus::Downloading,
+            );
+
+            let file_type = match os {
+                Os::Windows => DownloadedFileType::Zip,
+                _ => DownloadedFileType::GzipTar,
+            };
+
+            download_file(&asset.download_url, &version_dir, file_type)
+                .map_err(|e| format!("Failed to download just-lsp: {}", e))?;
 
             make_file_executable(&binary_path)?;
+
+            util::remove_outdated_versions(Self::LANGUAGE_SERVER_ID, &version_dir)?;
         }
 
         self.cached_binary_path = Some(binary_path.clone());
-        Ok(binary_path)
+        Ok(JustLspBinary {
+            path: binary_path,
+            args: binary_args,
+            env: binary_env,
+        })
     }
 }
 
@@ -105,13 +169,35 @@ impl Extension for JustExtension {
         language_server_id: &LanguageServerId,
         worktree: &Worktree,
     ) -> Result<Command> {
-        let path = self.language_server_binary_path(language_server_id, worktree)?;
+        let just_lsp = self.language_server_binary_path(language_server_id, worktree)?;
 
         Ok(Command {
-            command: path,
-            args: vec![],
-            env: Default::default(),
+            command: just_lsp.path,
+            args: just_lsp.args,
+            env: just_lsp.env,
         })
+    }
+
+    fn language_server_initialization_options(
+        &mut self,
+        _language_server_id: &LanguageServerId,
+        worktree: &Worktree,
+    ) -> Result<Option<Value>> {
+        let settings = config::get_initialization_options(Self::LANGUAGE_SERVER_ID, worktree)
+            .unwrap_or_default();
+
+        Ok(Some(settings))
+    }
+
+    fn language_server_workspace_configuration(
+        &mut self,
+        _language_server_id: &LanguageServerId,
+        worktree: &Worktree,
+    ) -> Result<Option<Value>> {
+        let settings = config::get_workspace_configuration(Self::LANGUAGE_SERVER_ID, worktree)
+            .unwrap_or_default();
+
+        Ok(Some(settings))
     }
 }
 
