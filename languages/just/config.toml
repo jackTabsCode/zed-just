@@ -1,6 +1,7 @@
 name = "Just"
 grammar = "just"
 path_suffixes = ["justfile", "Justfile", "JUSTFILE", "just"]
+first_line_pattern = '^#!.*\b(?:just)\b'
 line_comments = ["# "]
 brackets = [{ start = "(", end = ")", close = true, newline = true }]
 
