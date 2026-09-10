@@ -1,7 +1,7 @@
 id = "just"
 name = "Justfile"
 description = "Justfile language support"
-version = "0.2.0"
+version = "0.2.1"
 schema_version = 1
 authors = [
   "Jack Taylor <j@jackt.io>",
